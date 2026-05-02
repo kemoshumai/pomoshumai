@@ -3,4 +3,12 @@ name = "pomoshumai"
 version = "0.1.0"
 edition = "2024"
 
+[package.metadata.packager]
+before-packaging-command = "cargo build --release"
+formats = ["nsis"]
+product-name = "pomoshumai"
+identifier = "com.kemoshumai.pomoshumai"
+
 [dependencies]
+gpui = "0.2.2"
+gpui-component = "0.5.1"
