@@ -47,6 +47,7 @@ jobs:
             patchelf \
             libssl-dev \
             libxkbcommon-dev \
+            libxkbcommon-x11-dev \
             libwayland-dev \
             libx11-dev \
             libxcb1-dev \
@@ -55,11 +56,19 @@ jobs:
 
           sudo apt-get install -y libfuse2 || sudo apt-get install -y libfuse2t64 || true
 
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
       - name: Install cargo-packager
-        run: cargo install cargo-packager --locked
+        run: cargo binstall cargo-packager --no-confirm
 
       - name: Package
+        if: runner.os != 'Linux'
         run: cargo packager --release
+
+      - name: Package Linux
+        if: runner.os == 'Linux'
+        run: cargo packager --release --formats deb,appimage
 
       - name: Show generated files
         shell: bash
@@ -69,7 +78,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pomoshumai-${{ matrix.platform }}
-          path: dist/**
+          path: |
+            dist/**/*.dmg
+            dist/**/*.exe
+            dist/**/*.msi
+            dist/**/*.deb
+            dist/**/*.AppImage
+            dist/**/*.appimage
           if-no-files-found: error
 
       - name: Upload to GitHub Release
@@ -81,6 +96,13 @@ jobs:
           gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
             || gh release create "$GITHUB_REF_NAME" --generate-notes
 
-          while IFS= read -r -d '' file; do
+          find dist -type f \( \
+            -name "*.dmg" -o \
+            -name "*.exe" -o \
+            -name "*.msi" -o \
+            -name "*.deb" -o \
+            -name "*.AppImage" -o \
+            -name "*.appimage" \
+          \) -print0 | while IFS= read -r -d '' file; do
             gh release upload "$GITHUB_REF_NAME" "$file" --clobber
-          done < <(find dist -type f -print0)
+          done
