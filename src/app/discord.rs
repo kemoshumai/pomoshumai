@@ -1,7 +1,6 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use discord_presence::Client;
-use discord_presence::models::ActivityAssets;
 use discord_presence::models::rich_presence::ActivityType;
 
 use crate::app::state::TimerStatus;
@@ -9,7 +8,7 @@ use crate::app::state::TimerStatus;
 use super::state::Settings;
 use super::timer::TimerState;
 
-const LARGE_IMAGE_URL: &'static str =
+const LARGE_IMAGE_URL: &str =
     "https://pbs.twimg.com/media/HGlqsg1bYAEMoOK?format=jpg&name=orig";
 
 pub struct DiscordPresence {
@@ -81,7 +80,7 @@ impl DiscordPresence {
 }
 
 fn read_client_id() -> Option<u64> {
-    return Some(1500051633709514812);
+    Some(1500051633709514812)
 }
 
 fn build_timestamps(timer: &TimerState) -> (u64, u64) {

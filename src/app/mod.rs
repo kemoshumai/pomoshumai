@@ -13,6 +13,7 @@ use gpui::{
 };
 use gpui_component::button::Button;
 use gpui_component::input::{InputEvent, InputState, NumberInput, NumberInputEvent, StepAction};
+use gpui_component::scroll::ScrollableElement;
 use gpui_component::switch::Switch;
 use gpui_component::{Sizable, Size};
 
@@ -123,7 +124,7 @@ impl PomodoroApp {
                 Phase::Work => {
                     self.completed_pomodoros += 1;
                     let frequency = self.settings.long_break_frequency.max(1);
-                    let next_phase = if self.completed_pomodoros % frequency == 0 {
+                    let next_phase = if self.completed_pomodoros.is_multiple_of(frequency) {
                         Phase::LongBreak
                     } else {
                         Phase::ShortBreak
@@ -425,6 +426,9 @@ impl PomodoroApp {
 
     fn render_settings_overlay(
         &mut self,
+        settings_width: f32,
+        settings_input_width: f32,
+        fullscreen: bool,
         _window: &mut Window,
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
@@ -437,19 +441,26 @@ impl PomodoroApp {
         div()
             .absolute()
             .inset_0()
-            .bg(rgba(0x00000066))
+            .bg(if fullscreen {
+                rgb(0xFFFFFF).into()
+            } else {
+                rgba(0x00000066)
+            })
             .flex()
             .items_center()
             .justify_center()
             .child(
                 div()
                     .bg(rgb(0xFFFFFF))
-                    .rounded_lg()
                     .p_6()
-                    .w(px(380.))
                     .flex()
                     .flex_col()
                     .gap_4()
+                    .overflow_y_scrollbar()
+                    .when(fullscreen, |panel| panel.w_full().h_full())
+                    .when(!fullscreen, |panel| {
+                        panel.rounded_lg().w(px(settings_width)).h_auto()
+                    })
                     .child(
                         div()
                             .text_size(px(20.))
@@ -460,28 +471,28 @@ impl PomodoroApp {
                         "作業",
                         NumberInput::new(&inputs.work)
                             .with_size(input_size)
-                            .w(px(160.))
+                            .w(px(settings_input_width))
                             .suffix(div().px_2().child("分")),
                     ))
                     .child(setting_row(
                         "休憩",
                         NumberInput::new(&inputs.short_break)
                             .with_size(input_size)
-                            .w(px(160.))
+                            .w(px(settings_input_width))
                             .suffix(div().px_2().child("分")),
                     ))
                     .child(setting_row(
                         "長時間休憩",
                         NumberInput::new(&inputs.long_break)
                             .with_size(input_size)
-                            .w(px(160.))
+                            .w(px(settings_input_width))
                             .suffix(div().px_2().child("分")),
                     ))
                     .child(setting_row(
                         "長時間休憩の頻度",
                         NumberInput::new(&inputs.long_break_frequency)
                             .with_size(input_size)
-                            .w(px(160.))
+                            .w(px(settings_input_width))
                             .suffix(div().px_2().child("ポモドーロ")),
                     ))
                     .child(
@@ -523,6 +534,26 @@ impl Render for PomodoroApp {
         if self.show_settings {
             self.ensure_settings_inputs(window, cx);
         }
+
+        let viewport_size = window.viewport_size();
+        let viewport_width = f32::from(viewport_size.width);
+        let viewport_height = f32::from(viewport_size.height);
+        let edge_padding = 10.0;
+        let content_gap = 16.0;
+        let controls_height = 112.0;
+        let available_width = (viewport_width - edge_padding * 2.0).max(0.0);
+        let available_height =
+            (viewport_height - edge_padding * 2.0 - controls_height - content_gap * 2.0).max(0.0);
+        let ring_size = available_width.min(available_height).clamp(120.0, 300.0);
+        let ring_stroke_width = (ring_size * 0.04).clamp(6.0, 12.0);
+        let time_text_size = (ring_size * 0.16).clamp(24.0, 48.0);
+        let settings_fullscreen = viewport_width < 420.0 || viewport_height < 560.0;
+        let settings_width = if settings_fullscreen {
+            available_width
+        } else {
+            available_width.clamp(260.0, 380.0)
+        };
+        let settings_input_width = (settings_width * 0.42).clamp(120.0, 160.0);
 
         let background = if self.timer.phase == Phase::Work {
             rgb(0xFFEFF2)
@@ -580,13 +611,14 @@ impl Render for PomodoroApp {
             .h_full()
             .bg(background)
             .text_color(rgb(0x1A1A1A))
+            .p(px(edge_padding))
             .child(
                 Button::new("settings-button")
                     .label("設定")
                     .on_click(cx.listener(Self::on_open_settings))
                     .absolute()
-                    .top_4()
-                    .right_4(),
+                    .top(px(edge_padding))
+                    .right(px(edge_padding)),
             )
             .child(
                 div()
@@ -599,10 +631,15 @@ impl Render for PomodoroApp {
                     .child(
                         div()
                             .relative()
-                            .w(px(300.))
-                            .h(px(300.))
+                            .w(px(ring_size))
+                            .h(px(ring_size))
                             .child(
-                                timer_ring(progress, 12.0, ring_base.into(), ring_progress.into())
+                                timer_ring(
+                                    progress,
+                                    ring_stroke_width,
+                                    ring_base.into(),
+                                    ring_progress.into(),
+                                )
                                     .absolute()
                                     .inset_0(),
                             )
@@ -616,7 +653,7 @@ impl Render for PomodoroApp {
                                     .justify_center()
                                     .child(
                                         div()
-                                            .text_size(px(48.))
+                                            .text_size(px(time_text_size))
                                             .font_weight(FontWeight::BOLD)
                                             .child(time_text),
                                     )
@@ -636,7 +673,13 @@ impl Render for PomodoroApp {
                     ),
             )
             .when(self.show_settings, |this| {
-                this.child(self.render_settings_overlay(window, cx))
+                this.child(self.render_settings_overlay(
+                    settings_width,
+                    settings_input_width,
+                    settings_fullscreen,
+                    window,
+                    cx,
+                ))
             })
     }
 }

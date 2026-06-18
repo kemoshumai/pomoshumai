@@ -14,7 +14,7 @@ fn main() {
                 ..Default::default()
             },
             |window, cx| {
-                let view = cx.new(|cx| app::PomodoroApp::new(cx));
+                let view = cx.new(app::PomodoroApp::new);
                 cx.new(|cx| Root::new(view, window, cx))
             },
         )
