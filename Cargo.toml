@@ -35,4 +35,4 @@ gpui = { version = "0.2.2", default-features = false, features = ["windows-manif
 gpui = { version = "0.2.2", default-features = false, features = ["font-kit"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-gpui = { version = "0.2.2", default-features = false, features = ["wayland", "x11"] }
+gpui = { version = "0.2.2", default-features = false, features = ["x11"] }
