@@ -163,11 +163,15 @@ fn prepare_discord_ipc() {
 
 #[cfg(target_os = "macos")]
 fn discord_presence_ipc_root() -> Option<std::path::PathBuf> {
-    std::env::var("XDG_RUNTIME_DIR")
-        .or_else(|_| std::env::var("TMPDIR"))
-        .map(std::path::PathBuf::from)
-        .or_else(|_| Ok(std::env::temp_dir()))
-        .ok()
+    if let Ok(path) = std::env::var("XDG_RUNTIME_DIR") {
+        return Some(std::path::PathBuf::from(path));
+    }
+
+    if let Ok(path) = std::env::var("TMPDIR") {
+        return Some(std::path::PathBuf::from(path));
+    }
+
+    Some(std::env::temp_dir())
 }
 
 #[cfg(target_os = "macos")]
