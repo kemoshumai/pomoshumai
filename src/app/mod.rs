@@ -143,7 +143,7 @@ impl PomodoroApp {
     }
 
     fn update_discord_presence(&mut self) {
-        let status = self.status_text();
+        let status = self.discord_status_text();
         self.discord.update(
             &self.settings,
             &self.timer,
@@ -167,6 +167,26 @@ impl PomodoroApp {
                     "作業開始"
                 } else {
                     "休憩開始"
+                }
+            }
+        }
+    }
+
+    fn discord_status_text(&self) -> &'static str {
+        match self.timer.status {
+            TimerStatus::Paused => "一時停止中",
+            TimerStatus::Running => {
+                if self.timer.phase == Phase::Work {
+                    "作業中"
+                } else {
+                    "休憩中"
+                }
+            }
+            TimerStatus::Idle => {
+                if self.timer.phase == Phase::Work {
+                    "作業前"
+                } else {
+                    "休憩前"
                 }
             }
         }
@@ -442,7 +462,7 @@ impl PomodoroApp {
             .absolute()
             .inset_0()
             .bg(if fullscreen {
-                rgb(0xFFFFFF).into()
+                rgb(0xFFFFFF)
             } else {
                 rgba(0x00000066)
             })
@@ -640,8 +660,8 @@ impl Render for PomodoroApp {
                                     ring_base.into(),
                                     ring_progress.into(),
                                 )
-                                    .absolute()
-                                    .inset_0(),
+                                .absolute()
+                                .inset_0(),
                             )
                             .child(
                                 div()
