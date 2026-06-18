@@ -1,7 +1,7 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use discord_presence::Client;
-use discord_presence::models::rich_presence::ActivityType;
+use discord_presence::models::rich_presence::{Activity, ActivityType, DisplayType};
 
 use crate::app::state::{Phase, TimerStatus};
 
@@ -45,32 +45,8 @@ impl DiscordPresence {
             client
         });
 
-        let (start_ts, end_ts) = build_timestamps(timer);
-
-        let _ = client.set_activity(|activity| {
-            let mut activity = activity
-                .activity_type(ActivityType::Competing)
-                .status_display(discord_presence::models::DisplayType::Name)
-                .name(format!("今日の成果：{}ポモ", completed_pomodoros))
-                .details(discord_status)
-                .state(format!("現在{}ポモドーロ作業済み", completed_pomodoros))
-                .assets(|assets| {
-                    assets
-                        .large_image(discord_image_key(timer))
-                        .large_text(discord_status)
-                });
-
-            if timer.status == TimerStatus::Running {
-                activity = activity
-                    .activity_type(ActivityType::Watching)
-                    .name(format!(
-                        "今日の成果：{}ポモ（{}）",
-                        completed_pomodoros, discord_status
-                    ))
-                    .timestamps(|timestamps| timestamps.start(start_ts).end(end_ts));
-            }
-
-            activity
+        client.queue_activity(|activity| {
+            build_activity(activity, timer, discord_status, completed_pomodoros)
         });
     }
 
@@ -94,6 +70,38 @@ fn discord_image_key(timer: &TimerState) -> &'static str {
             Phase::ShortBreak | Phase::LongBreak => BREAK_IDLE_IMAGE,
         },
     }
+}
+
+fn build_activity(
+    activity: Activity,
+    timer: &TimerState,
+    discord_status: &str,
+    completed_pomodoros: u32,
+) -> Activity {
+    let mut activity = activity
+        .activity_type(ActivityType::Competing)
+        .status_display(DisplayType::Name)
+        .name(format!("今日の成果：{}ポモ", completed_pomodoros))
+        .details(discord_status)
+        .state(format!("現在{}ポモドーロ作業済み", completed_pomodoros))
+        .assets(|assets| {
+            assets
+                .large_image(discord_image_key(timer))
+                .large_text(discord_status)
+        });
+
+    if timer.status == TimerStatus::Running {
+        let (start_ts, end_ts) = build_timestamps(timer);
+        activity = activity
+            .activity_type(ActivityType::Watching)
+            .name(format!(
+                "今日の成果：{}ポモ（{}）",
+                completed_pomodoros, discord_status
+            ))
+            .timestamps(|timestamps| timestamps.start(start_ts).end(end_ts));
+    }
+
+    activity
 }
 
 fn read_client_id() -> Option<u64> {
