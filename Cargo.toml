@@ -9,6 +9,9 @@ product-name = "pomoshumai"
 identifier = "com.kemoshumai.pomoshumai"
 out-dir = "dist"
 
+[package.metadata.packager.macos]
+signing-identity = "-"
+
 [dependencies]
 discord-presence = { version = "3.2.0", features = ["unstable_name"] }
 directories = "5.0.1"
