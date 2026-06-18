@@ -39,6 +39,8 @@ impl DiscordPresence {
             return;
         };
 
+        prepare_discord_ipc();
+
         let client = self.client.get_or_insert_with(|| {
             let mut client = Client::new(client_id);
             client.start();
@@ -107,6 +109,76 @@ fn build_activity(
 fn read_client_id() -> Option<u64> {
     Some(1500051633709514812)
 }
+
+#[cfg(target_os = "macos")]
+fn prepare_discord_ipc() {
+    use std::collections::BTreeSet;
+    use std::path::PathBuf;
+
+    let Some(ipc_root) = discord_presence_ipc_root() else {
+        return;
+    };
+
+    if find_discord_ipc_paths(&ipc_root).next().is_some() {
+        return;
+    }
+
+    let mut candidate_roots = BTreeSet::new();
+    if let Ok(path) = std::env::var("XDG_RUNTIME_DIR") {
+        candidate_roots.insert(PathBuf::from(path));
+    }
+    if let Ok(path) = std::env::var("TMPDIR") {
+        candidate_roots.insert(PathBuf::from(path));
+    }
+    candidate_roots.insert(std::env::temp_dir());
+    candidate_roots.insert(PathBuf::from("/tmp"));
+    candidate_roots.insert(PathBuf::from("/private/tmp"));
+    candidate_roots.insert(PathBuf::from("/var/tmp"));
+
+    for actual_root in candidate_roots {
+        if actual_root == ipc_root {
+            continue;
+        }
+
+        let mut linked = false;
+        for actual_path in find_discord_ipc_paths(&actual_root) {
+            let Some(file_name) = actual_path.file_name() else {
+                continue;
+            };
+            let link_path = ipc_root.join(file_name);
+            if link_path.exists() {
+                continue;
+            }
+
+            if std::os::unix::fs::symlink(&actual_path, &link_path).is_ok() {
+                linked = true;
+            }
+        }
+
+        if linked {
+            return;
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn discord_presence_ipc_root() -> Option<std::path::PathBuf> {
+    std::env::var("XDG_RUNTIME_DIR")
+        .or_else(|_| std::env::var("TMPDIR"))
+        .map(std::path::PathBuf::from)
+        .or_else(|_| Ok(std::env::temp_dir()))
+        .ok()
+}
+
+#[cfg(target_os = "macos")]
+fn find_discord_ipc_paths(root: &std::path::Path) -> impl Iterator<Item = std::path::PathBuf> + '_ {
+    (0..10)
+        .map(|index| root.join(format!("discord-ipc-{index}")))
+        .filter(|path| path.exists())
+}
+
+#[cfg(not(target_os = "macos"))]
+fn prepare_discord_ipc() {}
 
 fn build_timestamps(timer: &TimerState) -> (u64, u64) {
     let now = SystemTime::now();
