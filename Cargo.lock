@@ -1173,6 +1173,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam-channel"
+version = "0.5.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82b8f8f868b36967f9606790d1903570de9ceaf870a7bf9fbbd3016d636a2cb2"
+dependencies = [
+ "crossbeam-utils",
+]
+
+[[package]]
 name = "crossbeam-deque"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1276,6 +1285,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "directories"
+version = "5.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a49173b84e034382284f27f1af4dcbbd231ffa358c0fe316541a7337f376a35"
+dependencies = [
+ "dirs-sys 0.4.1",
+]
+
+[[package]]
 name = "dirs"
 version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1314,6 +1332,29 @@ dependencies = [
  "option-ext",
  "redox_users",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "discord-presence"
+version = "3.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c8d811ebed75ede6c72a7b36fdcb832010298f77814cb3f63c1a7c9e6e8c192"
+dependencies = [
+ "byteorder",
+ "bytes",
+ "cfg-if",
+ "crossbeam-channel",
+ "log",
+ "num-derive",
+ "num-traits",
+ "parking_lot",
+ "paste",
+ "quork",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "uuid",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4099,8 +4140,13 @@ checksum = "5da3b0203fd7ee5720aa0b5e790b591aa5d3f41c3ed2c34a3a393382198af2f7"
 name = "pomoshumai"
 version = "0.1.0"
 dependencies = [
+ "directories",
+ "discord-presence",
  "gpui",
  "gpui-component",
+ "serde",
+ "serde_json",
+ "urlencoding",
 ]
 
 [[package]]
@@ -4315,6 +4361,32 @@ dependencies = [
  "socket2",
  "tracing",
  "windows-sys 0.60.2",
+]
+
+[[package]]
+name = "quork"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7681987dab9e7839dc146829c97f184f1e20a5e00e21204874ff7be361a9387"
+dependencies = [
+ "cfg-if",
+ "nix 0.29.0",
+ "quork-proc",
+ "thiserror 2.0.18",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "quork-proc"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "860d36740d9412e39fff90f57010e9870b15c2b48e5325295a6f5a824a480439"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro-error2",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -6188,6 +6260,12 @@ dependencies = [
  "serde",
  "serde_derive",
 ]
+
+[[package]]
+name = "urlencoding"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "daf8dba3b7eb870caf1ddeed7bc9d2a049f3cfdfae7cb521b087cc33ae4c49da"
 
 [[package]]
 name = "usvg"
