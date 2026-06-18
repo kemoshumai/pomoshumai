@@ -10,6 +10,16 @@ identifier = "com.kemoshumai.pomoshumai"
 out-dir = "dist"
 icons = ["assets/icons/256x256.png"]
 
+[package.metadata.packager.deb]
+depends = [
+    "libxkbcommon-x11-0",
+    "libxkbcommon0",
+    "libxcb1",
+    "libfontconfig1",
+    "libfreetype6",
+    "libvulkan1"
+]
+
 [dependencies]
 discord-presence = { version = "3.2.0", features = ["unstable_name"] }
 directories = "5.0.1"
