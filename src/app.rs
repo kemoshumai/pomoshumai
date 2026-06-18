@@ -20,6 +20,7 @@ pub struct PomodoroApp {
     pub(super) timer: TimerState,
     pub(super) completed_pomodoros: u32,
     pub(super) show_settings: bool,
+    pub(super) confirm_reset_results: bool,
     pub(super) settings_inputs: Option<SettingsInputs>,
     pub(super) tick_task: Option<Task<()>>,
     pub(super) presence_task: Option<Task<()>>,

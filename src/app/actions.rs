@@ -11,6 +11,7 @@ impl PomodoroApp {
     ) {
         let now = cx.background_executor().now();
         self.timer.start(now);
+        self.save_snapshot();
         cx.notify();
     }
 
@@ -22,6 +23,7 @@ impl PomodoroApp {
     ) {
         let now = cx.background_executor().now();
         self.timer.pause(now);
+        self.save_snapshot();
         cx.notify();
     }
 
@@ -32,6 +34,7 @@ impl PomodoroApp {
         cx: &mut Context<Self>,
     ) {
         self.timer.cancel(&self.settings);
+        self.save_snapshot();
         cx.notify();
     }
 
@@ -85,5 +88,39 @@ impl PomodoroApp {
             urlencoding::encode(&text)
         );
         cx.open_url(&url);
+    }
+
+    pub(super) fn on_reset_results_clicked(
+        &mut self,
+        _: &ClickEvent,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.confirm_reset_results = true;
+        cx.notify();
+    }
+
+    pub(super) fn on_cancel_reset_results(
+        &mut self,
+        _: &ClickEvent,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.confirm_reset_results = false;
+        cx.notify();
+    }
+
+    pub(super) fn on_confirm_reset_results(
+        &mut self,
+        _: &ClickEvent,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.completed_pomodoros = 0;
+        self.timer.cancel(&self.settings);
+        self.confirm_reset_results = false;
+        self.save_snapshot();
+        self.update_discord_presence();
+        cx.notify();
     }
 }

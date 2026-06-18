@@ -10,11 +10,40 @@ use super::{DiscordPresence, PomodoroApp};
 impl PomodoroApp {
     pub fn new(cx: &mut Context<Self>) -> Self {
         let settings = storage::load_settings();
+        let now = cx.background_executor().now();
+        let snapshot = storage::load_snapshot();
+        let timer = snapshot
+            .as_ref()
+            .map(|snapshot| {
+                let remaining_secs =
+                    if snapshot.status == TimerStatus::Running && snapshot.saved_at_unix_secs > 0 {
+                        snapshot.remaining_secs.saturating_sub(
+                            storage::unix_now().saturating_sub(snapshot.saved_at_unix_secs),
+                        )
+                    } else {
+                        snapshot.remaining_secs
+                    };
+
+                TimerState::restored(
+                    snapshot.phase,
+                    snapshot.status,
+                    Duration::from_secs(remaining_secs),
+                    Duration::from_secs(snapshot.session_duration_secs),
+                    now,
+                )
+            })
+            .unwrap_or_else(|| TimerState::new(&settings));
+        let completed_pomodoros = snapshot
+            .as_ref()
+            .map(|snapshot| snapshot.completed_pomodoros)
+            .unwrap_or_default();
+
         let mut app = Self {
-            timer: TimerState::new(&settings),
+            timer,
             settings,
-            completed_pomodoros: 0,
+            completed_pomodoros,
             show_settings: false,
+            confirm_reset_results: false,
             settings_inputs: None,
             tick_task: None,
             presence_task: None,
@@ -96,6 +125,7 @@ impl PomodoroApp {
         }
 
         if self.timer.status == TimerStatus::Running || finished {
+            self.save_snapshot();
             cx.notify();
         }
     }
@@ -164,5 +194,10 @@ impl PomodoroApp {
             self.timer.session_duration = duration;
             self.timer.remaining = duration;
         }
+    }
+
+    pub(super) fn save_snapshot(&self) {
+        let snapshot = storage::AppSnapshot::from_timer(&self.timer, self.completed_pomodoros);
+        storage::save_snapshot(&snapshot);
     }
 }

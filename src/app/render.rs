@@ -2,7 +2,7 @@ use gpui::prelude::FluentBuilder as _;
 use gpui::{
     Context, FontWeight, IntoElement, ParentElement, Render, Styled, Window, div, px, rgb, rgba,
 };
-use gpui_component::button::Button;
+use gpui_component::button::{Button, ButtonVariants};
 
 use super::PomodoroApp;
 use super::state::{Phase, TimerStatus};
@@ -147,9 +147,20 @@ impl Render for PomodoroApp {
                             .child(format!("現在 {completed} ポモドーロ作業済み")),
                     )
                     .child(
-                        Button::new("tweet")
-                            .label("今日の成果をツイートする")
-                            .on_click(cx.listener(Self::on_tweet_clicked)),
+                        div()
+                            .flex()
+                            .items_center()
+                            .gap_3()
+                            .child(
+                                Button::new("tweet")
+                                    .label("今日の成果をツイートする")
+                                    .on_click(cx.listener(Self::on_tweet_clicked)),
+                            )
+                            .child(
+                                Button::new("reset-results")
+                                    .label("リセット")
+                                    .on_click(cx.listener(Self::on_reset_results_clicked)),
+                            ),
                     ),
             )
             .when(self.show_settings, |this| {
@@ -161,5 +172,59 @@ impl Render for PomodoroApp {
                     cx,
                 ))
             })
+            .when(self.confirm_reset_results, |this| {
+                this.child(self.render_reset_results_confirmation(cx))
+            })
+    }
+}
+
+impl PomodoroApp {
+    fn render_reset_results_confirmation(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
+        div()
+            .absolute()
+            .inset_0()
+            .bg(rgba(0x00000066))
+            .flex()
+            .items_center()
+            .justify_center()
+            .child(
+                div()
+                    .bg(rgb(0xFFFFFF))
+                    .rounded_lg()
+                    .w(px(300.))
+                    .p_5()
+                    .flex()
+                    .flex_col()
+                    .gap_4()
+                    .child(
+                        div()
+                            .text_size(px(18.))
+                            .font_weight(FontWeight::BOLD)
+                            .child("リセットしますか？"),
+                    )
+                    .child(
+                        div()
+                            .text_sm()
+                            .child("タイマーと現在のポモドーロ数が初期状態に戻ります。"),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .items_center()
+                            .justify_end()
+                            .gap_3()
+                            .child(
+                                Button::new("cancel-reset-results")
+                                    .label("キャンセル")
+                                    .on_click(cx.listener(Self::on_cancel_reset_results)),
+                            )
+                            .child(
+                                Button::new("confirm-reset-results")
+                                    .label("リセット")
+                                    .danger()
+                                    .on_click(cx.listener(Self::on_confirm_reset_results)),
+                            ),
+                    ),
+            )
     }
 }

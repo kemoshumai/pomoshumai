@@ -23,6 +23,28 @@ impl TimerState {
         }
     }
 
+    pub fn restored(
+        phase: Phase,
+        status: TimerStatus,
+        remaining: Duration,
+        session_duration: Duration,
+        now: Instant,
+    ) -> Self {
+        let end_at = if status == TimerStatus::Running {
+            Some(now + remaining)
+        } else {
+            None
+        };
+
+        Self {
+            phase,
+            status,
+            remaining,
+            session_duration,
+            end_at,
+        }
+    }
+
     pub fn start(&mut self, now: Instant) {
         if self.status == TimerStatus::Running {
             return;

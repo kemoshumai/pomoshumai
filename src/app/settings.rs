@@ -170,6 +170,7 @@ impl PomodoroApp {
         if changed {
             storage::save_settings(&self.settings);
             self.update_idle_timer_duration();
+            self.save_snapshot();
             self.update_discord_presence();
             cx.notify();
         }
@@ -200,6 +201,7 @@ impl PomodoroApp {
         self.settings = Settings::default();
         storage::save_settings(&self.settings);
         self.update_idle_timer_duration();
+        self.save_snapshot();
         self.sync_settings_inputs(window, cx);
         self.update_discord_presence();
         cx.notify();
