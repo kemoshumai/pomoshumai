@@ -8,6 +8,10 @@ before-packaging-command = "cargo run --locked --example generate-third-party-li
 product-name = "pomoshumai"
 identifier = "com.kemoshumai.pomoshumai"
 out-dir = "dist"
+binaries-dir = "target/release"
+binaries = [
+    { path = "pomoshumai", main = true }
+]
 icons = ["assets/icons/256x256.png"]
 resources = [
     { src = "THIRD_PARTY_LICENSES.md", target = "THIRD_PARTY_LICENSES.md" }
