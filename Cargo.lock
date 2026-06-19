@@ -4142,6 +4142,7 @@ version = "0.1.8"
 dependencies = [
  "directories",
  "discord-presence",
+ "embed-resource",
  "gpui",
  "gpui-component",
  "serde",

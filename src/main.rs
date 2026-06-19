@@ -5,7 +5,9 @@
 
 mod app;
 
-use gpui::{App, AppContext, Application, Bounds, WindowBounds, WindowOptions, px, size};
+use gpui::{
+    App, AppContext, Application, Bounds, TitlebarOptions, WindowBounds, WindowOptions, px, size,
+};
 use gpui_component::Root;
 
 fn main() {
@@ -15,6 +17,10 @@ fn main() {
         let bounds = Bounds::centered(None, size(px(480.), px(640.)), cx);
         cx.open_window(
             WindowOptions {
+                titlebar: Some(TitlebarOptions {
+                    title: Some("pomoshumai".into()),
+                    ..Default::default()
+                }),
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
                 ..Default::default()
             },
