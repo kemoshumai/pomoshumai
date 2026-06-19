@@ -4,11 +4,14 @@ version = "0.1.7"
 edition = "2024"
 
 [package.metadata.packager]
-before-packaging-command = "cargo build --release"
+before-packaging-command = "cargo run --locked --example generate-third-party-licenses && cargo build --release"
 product-name = "pomoshumai"
 identifier = "com.kemoshumai.pomoshumai"
 out-dir = "dist"
 icons = ["assets/icons/256x256.png"]
+resources = [
+    { src = "THIRD_PARTY_LICENSES.md", target = "THIRD_PARTY_LICENSES.md" }
+]
 
 [package.metadata.packager.deb]
 depends = [
